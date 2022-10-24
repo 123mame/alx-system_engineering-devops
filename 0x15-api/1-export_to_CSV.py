@@ -1,32 +1,18 @@
 #!/usr/bin/python3
-"""
-a script that
-returns information about his/her TODO list progress.
-"""
+"""Exports to-do list information for a given employee ID to CSV format."""
 import csv
 import requests
-from sys import argv
+import sys
 
+if __name__ == "__main__":
+    user_id = sys.argv[1]
+    url = "https://jsonplaceholder.typicode.com/"
+    user = requests.get(url + "users/{}".format(user_id)).json()
+    username = user.get("username")
+    todos = requests.get(url + "todos", params={"userId": user_id}).json()
 
-def export_to_csv():
-    """ returns information about his/her TODO list progress. """
-    user = (requests.get(
-        'http://jsonplaceholder.typicode.com/users?id={}'.format(
-            argv[1]))).json()
-    res = requests.get(
-        'https://jsonplaceholder.typicode.com/todos?userId={}'.format(argv[1]))
-    done_task = []
-    num_all_task = 0
-    num_done_task = 0
-    userId = user[0].get('id')
-    for todo in res.json():
-        with open('{}.csv'.format(userId), mode='a') as todo_file:
-            todo_writer = csv.writer(
-                todo_file,
-                quoting=csv.QUOTE_ALL)
-            todo_writer.writerow([userId, user[0].get('username'),
-                                  todo.get('completed'), todo.get('title')])
-
-
-if __name__ == '__main__':
-    export_to_csv()
+    with open("{}.csv".format(user_id), "w", newline="") as csvfile:
+        writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+        [writer.writerow(
+            [user_id, username, t.get("completed"), t.get("title")]
+         ) for t in todos]

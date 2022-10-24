@@ -1,34 +1,19 @@
 #!/usr/bin/python3
-"""
-a script that
-returns information about his/her TODO list progress.
-"""
+"""Exports to-do list information for a given employee ID to JSON format."""
 import json
 import requests
-from sys import argv
+import sys
 
+if __name__ == "__main__":
+    user_id = sys.argv[1]
+    url = "https://jsonplaceholder.typicode.com/"
+    user = requests.get(url + "users/{}".format(user_id)).json()
+    username = user.get("username")
+    todos = requests.get(url + "todos", params={"userId": user_id}).json()
 
-def export_to_json():
-    """ returns information about his/her TODO list progress. """
-    user = (requests.get(
-        'http://jsonplaceholder.typicode.com/users?id={}'.format(
-            argv[1]))).json()
-    res = requests.get(
-        'https://jsonplaceholder.typicode.com/todos?userId={}'.format(argv[1]))
-    tasks = []
-    to_json = {}
-    userId = user[0].get('id')
-    username = user[0].get('username')
-    for todo in res.json():
-        dic_todo = {}
-        dic_todo['task'] = todo.get('title')
-        dic_todo['completed'] = todo.get('completed')
-        dic_todo['username'] = username
-        tasks.append(dic_todo)
-    to_json[userId] = tasks
-    with open('{}.json'.format(userId), 'w') as todo_file:
-        json.dump(to_json, todo_file)
-
-
-if __name__ == '__main__':
-    export_to_json()
+    with open("{}.json".format(user_id), "w") as jsonfile:
+        json.dump({user_id: [{
+                "task": t.get("title"),
+                "completed": t.get("completed"),
+                "username": username
+            } for t in todos]}, jsonfile)
