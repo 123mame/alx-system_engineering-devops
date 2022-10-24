@@ -1,33 +1,36 @@
 #!/usr/bin/python3
-"""fetches information from JSONplaceholder API and exports to JSON"""
+"""
+a script that
+returns information about his/her TODO list progress.
+"""
+import json
+import requests
 
-from json import dump
-from requests import get
-from sys import argv
 
-if __name__ == "__main__":
-    users_url = "https://jsonplaceholder.typicode.com/users"
-    users_result = get(users_url).json()
+def todo_all_employees():
+    """ returns information about his/her TODO list progress. """
+    user = (requests.get(
+        'http://jsonplaceholder.typicode.com/users')).json()
+    res = (requests.get(
+        'https://jsonplaceholder.typicode.com/todos')).json()
 
-    big_dict = {}
-    for user in users_result:
-        todo_list = []
+    to_json = {}
 
-        pep_fix = "https://jsonplaceholder.typicode.com"
-        todos_url = pep_fix + "/user/{}/todos".format(user.get("id"))
-        name_url = "https://jsonplaceholder.typicode.com/users/{}".format(
-            user.get("id"))
+    for userId in range(10):
+        tasks = []
+        username = user[userId].get('username')
+        for todo in res:
+            if todo.get('userId') == userId + 1:
+                dic_todo = {}
+                dic_todo['task'] = todo.get('title')
+                dic_todo['completed'] = todo.get('completed')
+                dic_todo['username'] = username
+                tasks.append(dic_todo)
+        to_json[userId + 1] = tasks
+    filename = "todo_all_employees.json"
+    with open(filename, "w") as f:
+        json.dump(to_json, f, sort_keys=True)
 
-        todo_result = get(todos_url).json()
-        name_result = get(name_url).json()
-        for todo in todo_result:
-            todo_dict = {}
-            todo_dict.update({"username": name_result.get("username"),
-                              "task": todo.get("title"),
-                              "completed": todo.get("completed")})
-            todo_list.append(todo_dict)
 
-        big_dict.update({user.get("id"): todo_list})
-
-    with open("todo_all_employees.json", 'w') as f:
-        dump(big_dict, f)
+if __name__ == '__main__':
+    todo_all_employees()
